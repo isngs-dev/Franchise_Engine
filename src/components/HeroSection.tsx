@@ -1,3 +1,4 @@
+import type { CSSProperties } from "react";
 import { ArrowRight, ArrowDown, Check, CalendarCheck, Database, Megaphone, RefreshCw, Bell } from "lucide-react";
 import { CTA } from "../content";
 import CtaLink from "./CtaLink";
@@ -14,6 +15,28 @@ function HeroVisual() {
   return (
     <figure className="hv" aria-label="Illustration of the Franchise Engine flow: an ad, a prospect enquiry, a Lily conversation, a booked meeting and a CRM update">
       <div className="hv__grid-bg" aria-hidden="true" />
+      <svg className="hv__growth" viewBox="0 0 560 520" preserveAspectRatio="xMidYMax slice" aria-hidden="true" focusable="false">
+        <defs>
+          <linearGradient id="hv-area" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stopColor="#E0561B" stopOpacity="0.24" />
+            <stop offset="1" stopColor="#E0561B" stopOpacity="0" />
+          </linearGradient>
+        </defs>
+        <g>
+          <rect className="gbar" x="34" y="460" width="38" height="60" rx="7" style={{ "--i": 0 } as CSSProperties} />
+          <rect className="gbar" x="98" y="425" width="38" height="95" rx="7" style={{ "--i": 1 } as CSSProperties} />
+          <rect className="gbar" x="162" y="440" width="38" height="80" rx="7" style={{ "--i": 2 } as CSSProperties} />
+          <rect className="gbar" x="226" y="390" width="38" height="130" rx="7" style={{ "--i": 3 } as CSSProperties} />
+          <rect className="gbar" x="290" y="405" width="38" height="115" rx="7" style={{ "--i": 4 } as CSSProperties} />
+          <rect className="gbar" x="354" y="350" width="38" height="170" rx="7" style={{ "--i": 5 } as CSSProperties} />
+          <rect className="gbar" x="418" y="370" width="38" height="150" rx="7" style={{ "--i": 6 } as CSSProperties} />
+          <rect className="gbar" x="482" y="305" width="38" height="215" rx="7" style={{ "--i": 7 } as CSSProperties} />
+        </g>
+        <path className="garea" d="M0 470 C 90 462, 150 430, 230 380 S 360 290, 420 200 S 500 90, 540 62 L540 520 L0 520 Z" fill="url(#hv-area)" />
+        <path className="gline" pathLength="1" d="M0 470 C 90 462, 150 430, 230 380 S 360 290, 420 200 S 500 90, 540 62" />
+        <circle className="gring" cx="540" cy="62" r="7" />
+        <circle className="gdot" cx="540" cy="62" r="6" />
+      </svg>
 
       <div className="hv__card hv-ad hv--ghost">
         <span className="hv__step">1</span>

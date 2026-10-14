@@ -101,8 +101,8 @@ const esc = (s) => String(s).replace(/[&<>"']/g, (ch) => ({ "&": "&amp;", "<": "
 const compact = (d) => d.toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, "");
 
 function shell(title, bodyHtml) {
-  return `<div style="font-family:Arial,Helvetica,sans-serif;background:#faf7f2;padding:24px">
-<div style="max-width:560px;margin:0 auto;background:#fff;border:1px solid #e8e3da;border-radius:14px;padding:28px;color:#344054;line-height:1.6">
+  return `<div style="font-family:Arial,Helvetica,sans-serif;background:#eaf0f8;padding:24px">
+<div style="max-width:560px;margin:0 auto;background:#fff;border:1px solid #d8e0ec;border-radius:14px;padding:28px;color:#344054;line-height:1.6">
 <p style="margin:0 0 18px;font-weight:700;font-size:18px;color:#14283f">Franchise<span style="color:#c2410c">Engine</span></p>
 <h1 style="margin:0 0 14px;font-size:20px;color:#14283f">${esc(title)}</h1>${bodyHtml}</div></div>`;
 }
