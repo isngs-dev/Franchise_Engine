@@ -1,0 +1,44 @@
+# Render Blueprint: one web service that builds the site and serves it together with the booking API (same origin, no CORS).
+# Secret values (sync: false) are NOT stored here: Render asks for them when the Blueprint is created
+# (or add them under Environment in the dashboard).
+services:
+  - type: web
+    name: franchise-engine
+    runtime: node
+    plan: free # free services sleep when idle, so the first visit after a quiet period is slow; use a paid plan to avoid that
+    buildCommand: npm install --include=dev && npm run build
+    startCommand: npm run server
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: TRUST_PROXY # rate limiting needs the real client IP from Render's proxy
+        value: "1"
+
+      # Secrets: copy from your local server/.env
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: GOOGLE_CLIENT_SECRET
+        sync: false
+      - key: GOOGLE_REFRESH_TOKEN
+        sync: false
+
+      # Booking configuration (not secret). Render's servers run in UTC, so BOOKING_TZ must be set explicitly.
+      - key: BOOKING_TZ # your team's IANA time zone: CHECK THIS
+        value: Asia/Kolkata
+      - key: GOOGLE_CALENDAR_ID
+        value: primary
+      - key: CONFIRMATION_CC
+        value: kaustubh.b1@isngs.com
+      - key: BOOKING_START_HOUR
+        value: "9"
+      - key: BOOKING_END_HOUR
+        value: "17"
+      - key: BOOKING_SLOT_MINUTES
+        value: "30"
+      - key: BOOKING_DAYS
+        value: "1,2,3,4,5"
+      - key: BOOKING_MIN_NOTICE_MINUTES
+        value: "60"
+      - key: BOOKING_MAX_DAYS
+        value: "60"
