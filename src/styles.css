@@ -464,6 +464,10 @@ img, svg, video, iframe { max-width: 100%; }
 .field input[aria-invalid="true"] { border-color: #c4352c; }
 .field input[aria-invalid="true"]:focus { box-shadow: 0 0 0 4px rgba(196, 53, 44, 0.15); }
 .field input:disabled { background: #f4f6f7; }
+.phone { position: relative; }
+.phone__prefix { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--muted); font-weight: 600; pointer-events: none; }
+.phone input { padding-left: 44px; }
+.field__hint { margin-top: 6px; font-size: 0.8125rem; color: var(--muted); line-height: 1.4; }
 .field__error { display: flex; align-items: flex-start; gap: 6px; margin-top: 6px; font-size: 0.8125rem; color: #b42318; line-height: 1.4; }
 .field__error svg { flex: none; margin-top: 2px; }
 .formcard__status:not(:empty) { margin-top: 18px; }

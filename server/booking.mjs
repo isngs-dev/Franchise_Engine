@@ -70,6 +70,14 @@ export const overlaps = (slot, busy) => busy.some((b) => new Date(slot.start) < 
 
 const clean = (v, max) => String(v ?? "").replace(/[\u0000-\u001f\u007f<>]/g, " ").replace(/\s+/g, " ").trim().slice(0, max);
 
+/** US (NANP) phone number -> "(555) 234-5678", or null. Accepts an optional leading +1 / 1. Area code and exchange start with 2-9. */
+export function normalizeUsPhone(raw) {
+  let d = String(raw ?? "").replace(/\D/g, "");
+  if (d.length === 11 && d[0] === "1") d = d.slice(1);
+  if (!/^[2-9]\d{2}[2-9]\d{6}$/.test(d)) return null;
+  return `(${d.slice(0, 3)}) ${d.slice(3, 6)}-${d.slice(6)}`;
+}
+
 /** Validates the visitor's details. Names/companies are stripped of control characters (no header injection). */
 export function validateLead(body) {
   const lead = {
@@ -80,8 +88,9 @@ export function validateLead(body) {
   };
   if (!lead.name || !lead.company) return { error: "Name and company are required." };
   if (!/^[^\s@<>,;"]+@[^\s@<>,;"]+\.[^\s@<>,;"]{2,}$/.test(lead.email)) return { error: "A valid email address is required." };
-  const digits = lead.phone.replace(/\D/g, "");
-  if (!/^[+\d\s().-]+$/.test(lead.phone) || digits.length < 7 || digits.length > 15) return { error: "A valid phone number is required." };
+  const phone = /^[+\d\s().-]+$/.test(lead.phone) ? normalizeUsPhone(lead.phone) : null;
+  if (!phone) return { error: "A valid US phone number is required." };
+  lead.phone = phone;
   return { lead };
 }
 

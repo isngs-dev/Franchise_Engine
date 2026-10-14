@@ -30,11 +30,17 @@ test("slots: weekdays only, working hours, notice and range rules", () => {
 });
 
 test("validation rejects bad input and strips markup/control characters", () => {
-  assert.ok(validateLead({ name: "A", company: "B", email: "a@b", phone: "1234567" }).error);
+  assert.ok(validateLead({ name: "A", company: "B", email: "a@b", phone: "5552345678" }).error);
   assert.ok(validateLead({ name: "A", company: "B", email: "a@b.com", phone: "12" }).error);
-  const ok = validateLead({ name: "Jane\r\nBcc: x@y.z <b>", company: "Acme", email: "jane@acme.com", phone: "+1 555 123 4567" });
+  for (const bad of ["1234567", "+44 20 7946 0958", "(155) 234-5678", "(555) 134-5678", "555234567", "98765432109"]) {
+    assert.ok(validateLead({ name: "A", company: "B", email: "a@b.com", phone: bad }).error, bad);
+  }
+  for (const good of ["5552345678", "(555) 234-5678", "+1 555 234 5678", "1-555-234-5678"]) {
+    assert.equal(validateLead({ name: "A", company: "B", email: "a@b.com", phone: good }).lead.phone, "(555) 234-5678", good);
+  }
+  const ok = validateLead({ name: "Jane\r\nBcc: x@y.z <b>", company: "Acme", email: "jane@acme.com", phone: "+1 555 234 5678" });
   assert.equal(ok.lead.name, "Jane Bcc: x@y.z b"); // no CR/LF, no angle brackets
-  assert.ok(validateLead({ name: "A", company: "B", email: "a@b.com\r\nBcc: evil@x.com", phone: "1234567" }).error);
+  assert.ok(validateLead({ name: "A", company: "B", email: "a@b.com\r\nBcc: evil@x.com", phone: "5552345678" }).error);
 });
 
 test("MIME message has To, Cc, encoded subject and both bodies", () => {
@@ -59,7 +65,7 @@ async function withServer(env, fetchImpl, fn) {
   try { await fn(base); } finally { server.close(); }
 }
 const post = (base, path, body) => fetch(base + path, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) }).then(async (r) => [r.status, await r.json()]);
-const lead = { name: "Jane Doe", company: "Acme", email: "jane@acme.com", phone: "+1 555 123 4567" };
+const lead = { name: "Jane Doe", company: "Acme", email: "jane@acme.com", phone: "(555) 234-5678" };
 
 test("demo mode (no credentials) books nothing and says so", async () => {
   await withServer(baseEnv, undefined, async (base) => {

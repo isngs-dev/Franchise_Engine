@@ -17,12 +17,27 @@ const FIELDS = [
 
 const EMPTY: Values = { name: "", company: "", email: "", phone: "" };
 
+const PHONE_EXAMPLE = "(555) 234-5678";
+
+/** The 10 US digits in a string (a leading country code 1 is dropped). */
+const usDigits = (raw: string) => {
+  const d = raw.replace(/\D/g, "");
+  return (d.length > 10 && d[0] === "1" ? d.slice(1) : d).slice(0, 10);
+};
+
+/** Formats digits as the visitor types: 555 -> "(555", 5552 -> "(555) 2", 5552345678 -> "(555) 234-5678". */
+function formatUsPhone(digits: string) {
+  if (digits.length <= 3) return digits.length ? `(${digits}` : "";
+  if (digits.length <= 6) return `(${digits.slice(0, 3)}) ${digits.slice(3)}`;
+  return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}`;
+}
+
 function validateField(key: keyof Values, raw: string): string {
   const v = raw.trim();
   if (!v) return `Please enter ${key === "email" ? "your email" : key === "company" ? "your company name" : key === "phone" ? "your phone number" : "your name"}.`;
   if (key === "email" && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v)) return "Please enter a valid email address, like name@company.com.";
-  if (key === "phone" && (!/^[+\d\s().-]+$/.test(v) || v.replace(/\D/g, "").length < 7 || v.replace(/\D/g, "").length > 15))
-    return "Please enter a valid phone number (7–15 digits).";
+  if (key === "phone" && !/^[2-9]\d{2}[2-9]\d{6}$/.test(usDigits(v)))
+    return `Please enter a 10-digit US phone number, like ${PHONE_EXAMPLE}.`;
   return "";
 }
 
@@ -50,7 +65,14 @@ export default function LeadCaptureForm() {
   const delivered = useRef(""); // the last payload already posted to FORM_ENDPOINT (avoids duplicates on re-submit)
   const formRef = useRef<HTMLFormElement>(null);
 
-  const setField = (key: keyof Values, value: string) => {
+  const setField = (key: keyof Values, raw: string) => {
+    let value = raw;
+    if (key === "phone") {
+      // Mask as they type. Deleting a bracket/space/dash must remove a digit, otherwise the mask would put it back.
+      let digits = usDigits(raw);
+      if (raw.length === values.phone.length - 1 && digits === usDigits(values.phone)) digits = digits.slice(0, -1);
+      value = formatUsPhone(digits);
+    }
     setValues((v) => ({ ...v, [key]: value }));
     if (errors[key]) setErrors((e) => ({ ...e, [key]: validateField(key, value) || undefined }));
   };
@@ -123,18 +145,21 @@ export default function LeadCaptureForm() {
                     <label htmlFor={`field-${f.key}`}>
                       {f.label} <span className="req" aria-hidden="true">*</span>
                     </label>
+                    <div className={f.key === "phone" ? "phone" : undefined}>
+                    {f.key === "phone" && <span className="phone__prefix" aria-hidden="true">+1</span>}
                     <input
                       id={`field-${f.key}`}
                       name={f.key}
                       type={f.type}
                       inputMode={f.type === "tel" ? "tel" : undefined}
-                      autoComplete={f.autoComplete}
+                      maxLength={f.key === "phone" ? 14 : undefined}
+                      autoComplete={f.key === "phone" ? "tel-national" : f.autoComplete}
                       placeholder={f.placeholder}
                       value={values[f.key]}
                       required
                       aria-required="true"
                       aria-invalid={err ? true : undefined}
-                      aria-describedby={err ? `err-${f.key}` : undefined}
+                      aria-describedby={err ? `err-${f.key}` : f.key === "phone" ? "hint-phone" : undefined}
                       disabled={busy}
                       onChange={(e) => setField(f.key, e.target.value)}
                       onBlur={(e) => {
@@ -144,6 +169,10 @@ export default function LeadCaptureForm() {
                         }
                       }}
                     />
+                    </div>
+                    {f.key === "phone" && !err && (
+                      <p className="field__hint" id="hint-phone">US number, for example {PHONE_EXAMPLE}</p>
+                    )}
                     {err && (
                       <p className="field__error" id={`err-${f.key}`}>
                         <AlertCircle size={14} aria-hidden="true" /> {err}
