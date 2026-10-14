@@ -24,8 +24,8 @@ services:
         sync: false
 
       # Booking configuration (not secret). Render's servers run in UTC, so BOOKING_TZ must be set explicitly.
-      - key: BOOKING_TZ # your team's IANA time zone: CHECK THIS
-        value: Asia/Kolkata
+      - key: BOOKING_TZ # your team's IANA time zone
+        value: America/New_York
       - key: GOOGLE_CALENDAR_ID
         value: primary
       - key: CONFIRMATION_CC
