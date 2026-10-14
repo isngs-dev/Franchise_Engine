@@ -29,7 +29,6 @@ const post = <T>(path: string, body: unknown) =>
 
 export const getAvailability = (date: string, signal?: AbortSignal) => request<Availability>(`/availability?date=${encodeURIComponent(date)}`, { signal });
 
-export const bookCall = (lead: Lead, start: string) =>
-  post<Booked>("/book", { ...lead, start, timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone });
+export const bookCall = (lead: Lead, start: string) => post<Booked>("/book", { ...lead, start });
 
 export const requestEmail = (lead: Lead) => post<Emailed>("/email-only", lead);

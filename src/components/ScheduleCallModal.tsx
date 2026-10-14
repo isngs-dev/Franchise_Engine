@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { AlertCircle, CalendarCheck, CheckCircle2, Loader2, Mail, Video, X } from "lucide-react";
 import { ApiError, bookCall, getAvailability, requestEmail, type Lead, type Slot } from "../api";
 
@@ -10,7 +10,6 @@ type View =
   | { name: "emailed"; demo: boolean; emailSent: boolean };
 
 const MAX_DAYS = 60; // keep in step with BOOKING_MAX_DAYS on the server
-const visitorTz = () => Intl.DateTimeFormat().resolvedOptions().timeZone;
 
 /** YYYY-MM-DD for a local calendar day offset from today. */
 function dayString(offset = 0) {
@@ -19,8 +18,6 @@ function dayString(offset = 0) {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 
-const timeFmt = new Intl.DateTimeFormat(undefined, { hour: "numeric", minute: "2-digit" });
-const longFmt = new Intl.DateTimeFormat(undefined, { dateStyle: "full", timeStyle: "short" });
 const dayFmt = new Intl.DateTimeFormat(undefined, { weekday: "long", day: "numeric", month: "long", timeZone: "UTC" });
 const dayLabel = (date: string) => dayFmt.format(new Date(`${date}T00:00:00Z`));
 
@@ -37,6 +34,20 @@ export default function ScheduleCallModal({ lead, onClose }: { lead: Lead | null
   const [busy, setBusy] = useState<null | "book" | "email">(null);
   const [error, setError] = useState("");
 
+  // Every time on this dialog is shown in the team's time zone (BOOKING_TZ on the server), e.g. America/New_York.
+  const zone = teamTz || undefined;
+  const timeFmt = useMemo(() => new Intl.DateTimeFormat(undefined, { hour: "numeric", minute: "2-digit", timeZone: zone }), [zone]);
+  const longFmt = useMemo(() => new Intl.DateTimeFormat(undefined, { weekday: "long", year: "numeric", month: "long", day: "numeric", hour: "numeric", minute: "2-digit", timeZoneName: "short", timeZone: zone }), [zone]);
+  const zoneName = useMemo(() => {
+    if (!teamTz) return "";
+    try {
+      const generic = new Intl.DateTimeFormat("en-US", { timeZone: teamTz, timeZoneName: "longGeneric" }).formatToParts(new Date()).find((p) => p.type === "timeZoneName")?.value;
+      return `${generic ?? teamTz} (${teamTz})`;
+    } catch {
+      return teamTz; // older browsers without the "longGeneric" option
+    }
+  }, [teamTz]);
+
   // Open/close the native <dialog> (it provides the focus trap, Esc handling and backdrop).
   useEffect(() => {
     const d = dialog.current;
@@ -48,6 +59,7 @@ export default function ScheduleCallModal({ lead, onClose }: { lead: Lead | null
       setError("");
       setBusy(null);
       d.showModal();
+      d.scrollTop = 0; // always open at the top, even if focus lands lower in a short window
     } else if (!lead && d.open) d.close();
   }, [lead]);
 
@@ -130,7 +142,6 @@ export default function ScheduleCallModal({ lead, onClose }: { lead: Lead | null
     }
   };
 
-  const tz = visitorTz();
   const demoNote = "Demo mode: the booking service has no Google credentials yet, so nothing was booked and no email was sent.";
 
   return (
@@ -178,9 +189,7 @@ export default function ScheduleCallModal({ lead, onClose }: { lead: Lead | null
               ) : (
                 <p className="muted">No times are available on this day. Please pick another date.</p>
               )}
-              <p className="modal__tz">
-                Times are shown in your time zone ({tz}).{teamTz && teamTz !== tz ? ` Dates follow our calendar (${teamTz}).` : ""}
-              </p>
+              {zoneName && <p className="modal__tz">All times are shown in {zoneName}.</p>}
             </fieldset>
 
             {demo && (
@@ -210,7 +219,7 @@ export default function ScheduleCallModal({ lead, onClose }: { lead: Lead | null
           <div className="modal__done">
             <CheckCircle2 size={44} className="modal__tick" aria-hidden="true" />
             <h2 id="schedule-title" tabIndex={-1} ref={heading}>{view.demo ? "Demo: no call was booked" : "Your call is booked"}</h2>
-            <p><strong>{longFmt.format(new Date(view.start))}</strong><br /><span className="muted">{tz}</span></p>
+            <p><strong>{longFmt.format(new Date(view.start))}</strong><br /><span className="muted">{zoneName}</span></p>
             {view.meetLink && (
               <p><a className="modal__link" href={view.meetLink} target="_blank" rel="noopener noreferrer"><Video size={16} aria-hidden="true" /> Google Meet link</a></p>
             )}

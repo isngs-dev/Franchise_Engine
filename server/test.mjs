@@ -44,12 +44,12 @@ test("MIME message has To, Cc, encoded subject and both bodies", () => {
   assert.deepEqual(parts, ["plain body", "<p>html body</p>"]);
 });
 
-test("confirmation email escapes HTML and shows the time in the visitor's zone", () => {
+test("confirmation email escapes HTML and shows the time in the team's zone", () => {
   const start = new Date("2026-10-14T05:00:00Z");
-  const mail = confirmationEmail({ lead: { name: "<script>x</script>", company: "A&B", phone: "123" }, start, end: new Date(start.getTime() + 1.8e6), visitorTz: "Europe/London", meetLink: "https://meet.google.com/abc" });
+  const mail = confirmationEmail({ lead: { name: "<script>x</script>", company: "A&B", phone: "123" }, start, end: new Date(start.getTime() + 1.8e6), timeZone: "America/New_York", meetLink: "https://meet.google.com/abc" });
   assert.ok(!mail.html.includes("<script>"));
   assert.match(mail.html, /A&amp;B/);
-  assert.match(mail.text, /Wednesday, 14 October 2026 at 06:00/);
+  assert.match(mail.text, /Wednesday, 14 October 2026 at 01:00 \(Eastern Daylight Time\)/);
 });
 
 async function withServer(env, fetchImpl, fn) {
@@ -92,7 +92,7 @@ test("live mode: free/busy check, event with attendee, email to visitor cc the t
     assert.equal(a.demo, false);
     assert.equal(a.slots.length, 15); // the 09:00 slot is busy
     assert.ok(!a.slots.some((s) => s.start === "2026-10-14T03:30:00.000Z"));
-    const [s, b] = await post(base, "/api/book", { ...lead, start: slotStart, timeZone: "Europe/London" });
+    const [s, b] = await post(base, "/api/book", { ...lead, start: slotStart, });
     assert.equal(s, 200);
     assert.deepEqual([b.demo, b.emailSent, b.meetLink], [false, true, "https://meet.google.com/abc-defg"]);
     const event = JSON.parse(calls.find((c) => c.url.includes("/events")).body);

@@ -8,7 +8,7 @@
 import http from "node:http";
 import fs from "node:fs";
 import { fileURLToPath, pathToFileURL } from "node:url";
-import { loadConfig, slotsForDate, businessDate, overlaps, validateLead, validTimeZone, confirmationEmail, enquiryEmail } from "./booking.mjs";
+import { loadConfig, slotsForDate, businessDate, overlaps, validateLead, confirmationEmail, enquiryEmail } from "./booking.mjs";
 import { createGoogle } from "./google.mjs";
 import { createStatic } from "./static.mjs";
 
@@ -73,7 +73,6 @@ export function createApp(env = process.env, { fetchImpl = fetch, now = () => ne
     if (Number.isNaN(startDate.getTime())) return [400, { error: "Please choose a time." }];
     const slot = slotsForDate(businessDate(startDate, cfg.tz), cfg, now())?.find((s) => s.start === startDate.toISOString());
     if (!slot) return [409, { error: "That time is no longer available. Please pick another." }];
-    const visitorTz = validTimeZone(body.timeZone) ? body.timeZone : cfg.tz;
 
     if (!google) {
       log.info(`[demo] would book ${slot.start} for ${v.lead.email} (cc ${cfg.cc}); nothing booked or sent`);
@@ -90,7 +89,7 @@ export function createApp(env = process.env, { fetchImpl = fetch, now = () => ne
     });
     let emailSent = true;
     try {
-      const mail = confirmationEmail({ lead: v.lead, start: new Date(slot.start), end: new Date(slot.end), visitorTz, meetLink: event.meetLink });
+      const mail = confirmationEmail({ lead: v.lead, start: new Date(slot.start), end: new Date(slot.end), timeZone: cfg.tz, meetLink: event.meetLink });
       await google.sendMail({ to: v.lead.email, cc: cfg.cc, ...mail });
     } catch (err) {
       emailSent = false; // the call IS booked; tell the visitor honestly

@@ -43,15 +43,6 @@ export function businessDate(instant, tz) {
   return new Intl.DateTimeFormat("en-CA", { timeZone: tz, year: "numeric", month: "2-digit", day: "2-digit" }).format(instant);
 }
 
-export function validTimeZone(tz) {
-  try {
-    new Intl.DateTimeFormat("en", { timeZone: tz });
-    return typeof tz === "string" && tz.length < 64;
-  } catch {
-    return false;
-  }
-}
-
 // ── slots ───────────────────────────────────────────────────────────────────────────────────────────────────────
 
 /** Bookable slots for a business-time-zone date. Returns null for a malformed date. */
@@ -111,14 +102,14 @@ function detailsList(lead) {
   return `<ul style="padding-left:18px;margin:8px 0 0"><li>Name: ${esc(lead.name)}</li><li>Company: ${esc(lead.company)}</li><li>Phone: ${esc(lead.phone)}</li></ul>`;
 }
 
-/** Booking confirmation, with times shown in the visitor's own time zone. */
-export function confirmationEmail({ lead, start, end, visitorTz, meetLink }) {
-  const when = new Intl.DateTimeFormat("en-GB", { timeZone: visitorTz, dateStyle: "full", timeStyle: "short" }).format(start);
-  const zone = new Intl.DateTimeFormat("en-GB", { timeZone: visitorTz, timeZoneName: "long" }).formatToParts(start).find((p) => p.type === "timeZoneName")?.value ?? visitorTz;
+/** Booking confirmation, with times shown in the team's time zone (the same one the booking page shows). */
+export function confirmationEmail({ lead, start, end, timeZone, meetLink }) {
+  const when = new Intl.DateTimeFormat("en-GB", { timeZone, dateStyle: "full", timeStyle: "short" }).format(start);
+  const zone = new Intl.DateTimeFormat("en-GB", { timeZone, timeZoneName: "long" }).formatToParts(start).find((p) => p.type === "timeZoneName")?.value ?? timeZone;
   const addUrl =
     "https://calendar.google.com/calendar/render?action=TEMPLATE&text=" + encodeURIComponent("Call with Franchise Engine") +
     `&dates=${compact(start)}/${compact(end)}` + (meetLink ? "&location=" + encodeURIComponent(meetLink) : "");
-  const subject = `Your call with Franchise Engine is booked: ${new Intl.DateTimeFormat("en-GB", { timeZone: visitorTz, weekday: "short", day: "numeric", month: "short", hour: "numeric", minute: "2-digit" }).format(start)}`;
+  const subject = `Your call with Franchise Engine is booked: ${new Intl.DateTimeFormat("en-GB", { timeZone, weekday: "short", day: "numeric", month: "short", hour: "numeric", minute: "2-digit" }).format(start)}`;
   const text = [
     `Hi ${lead.name},`, "",
     "Thank you for getting in touch. Your call with the Franchise Engine team is booked.", "",
